@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layoutRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
@@ -29,7 +30,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="Moves: 0"
+                android:text="@string/moves"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" />
         </androidx.cardview.widget.CardView>
 
@@ -46,7 +47,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="Pairs: 0/4"
+                android:text="@string/pairs"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" />
         </androidx.cardview.widget.CardView>
 
@@ -58,6 +59,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:overScrollMode="never"
         app:layout_constraintBottom_toTopOf="@+id/gameInfoLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
