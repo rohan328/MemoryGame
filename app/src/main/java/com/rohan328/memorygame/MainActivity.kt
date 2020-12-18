@@ -1,10 +1,12 @@
 package com.rohan328.memorygame
 
+import android.animation.ArgbEvaluator
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -31,6 +33,9 @@ class MainActivity : AppCompatActivity() {
         tvNumMoves = findViewById(R.id.tvNumMoves)
         tvNumPairs = findViewById(R.id.tvNumPairs)
         layoutRoot = findViewById(R.id.layoutRoot)
+
+        //set zero progress
+        tvNumPairs.setTextColor(ContextCompat.getColor(this, R.color.color_progress_none))
 
         //init game
         memoryGame = MemoryGame(boardSize)
@@ -67,6 +72,14 @@ class MainActivity : AppCompatActivity() {
 
         //flip card
         if (memoryGame.flipCard(position)) {
+
+            val color = ArgbEvaluator().evaluate(
+                memoryGame.numPairsFound.toFloat() / boardSize.getNumPairs(),
+                ContextCompat.getColor(this, R.color.color_progress_none),
+                ContextCompat.getColor(this, R.color.color_progress_full)
+            ) as Int
+            tvNumPairs.setTextColor(color)
+
             //update pairs found
             tvNumPairs.text = "Pairs: ${memoryGame.numPairsFound}/${boardSize.getNumPairs()}"
 
