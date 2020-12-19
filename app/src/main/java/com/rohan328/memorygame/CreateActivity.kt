@@ -20,6 +20,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.rohan328.memorygame.models.BoardSize
 import com.rohan328.memorygame.utils.BitmapScaler
 import com.rohan328.memorygame.utils.EXTRA_BOARD_SIZE
@@ -46,6 +49,8 @@ class CreateActivity : AppCompatActivity() {
     private lateinit var boardSize: BoardSize
     private var numImagesRequired = -1
     private val chosenImageUris = mutableListOf<Uri>()
+    private val storage = Firebase.storage
+    private val db = Firebase.firestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,10 +165,34 @@ class CreateActivity : AppCompatActivity() {
 
     //save data to firebase
     private fun saveDataToFirebase() {
-
+        val customGameName = etGameName.text.toString()
+        var didEncounterError = false
+        val uploadedImageUrls = mutableListOf<String>()
         for ((index, photoUri) in chosenImageUris.withIndex()) {
             val imageByteArray = getImageByteArray(photoUri)
+            val filePath = "images/$customGameName/${System.currentTimeMillis()}-$index.jpg"
+            val photoReference = storage.reference.child(filePath)
+            photoReference.putBytes(imageByteArray).continueWithTask { photoUploadTask ->
+                photoReference.downloadUrl
+            }.addOnCompleteListener { downloadUrlTask ->
+                if (!downloadUrlTask.isSuccessful) {
+                    Toast.makeText(this, "Failed to upload image", Toast.LENGTH_LONG).show()
+                    didEncounterError = true
+                    return@addOnCompleteListener
+                }
+                if (didEncounterError) return@addOnCompleteListener
+                val downloadUrl = downloadUrlTask.result.toString()
+                uploadedImageUrls.add(downloadUrl)
+
+                if (uploadedImageUrls.size == chosenImageUris.size) {
+                    handleAllImagesUploaded(customGameName, uploadedImageUrls)
+                }
+            }
         }
+    }
+
+    private fun handleAllImagesUploaded(gameName: String, imageUrls: MutableList<String>) {
+
     }
 
     //returns scaled image byte array
