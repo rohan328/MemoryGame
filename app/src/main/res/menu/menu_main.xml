@@ -15,4 +15,8 @@
         android:id="@+id/miCreate"
         android:title="@string/create_custom_game"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/miPlayCustom"
+        android:title="Play custom game"
+        app:showAsAction="never" />
 </menu>

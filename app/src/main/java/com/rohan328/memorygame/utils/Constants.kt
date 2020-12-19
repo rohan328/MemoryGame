@@ -4,6 +4,7 @@ import com.rohan328.memorygame.R
 
 
 const val EXTRA_BOARD_SIZE = "newBoardSize"
+const val EXTRA_GAME_NAME = "game_name"
 
 val DEFAULT_ICONS = listOf(
     R.drawable.ic_airplane,

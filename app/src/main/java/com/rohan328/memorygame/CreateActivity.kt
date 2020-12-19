@@ -1,6 +1,7 @@
 package com.rohan328.memorygame
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -15,8 +16,10 @@ import android.text.InputFilter
 import android.text.TextWatcher
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -24,10 +27,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.rohan328.memorygame.models.BoardSize
-import com.rohan328.memorygame.utils.BitmapScaler
-import com.rohan328.memorygame.utils.EXTRA_BOARD_SIZE
-import com.rohan328.memorygame.utils.isPermissionGranted
-import com.rohan328.memorygame.utils.requestPermission
+import com.rohan328.memorygame.utils.*
 import java.io.ByteArrayOutputStream
 
 class CreateActivity : AppCompatActivity() {
@@ -41,11 +41,12 @@ class CreateActivity : AppCompatActivity() {
         private const val TAG = "CreateActivity"
     }
 
-    private lateinit var adapter: ImagePickerAdapter
     private lateinit var rvImagePicker: RecyclerView
     private lateinit var btnSave: Button
     private lateinit var etGameName: EditText
+    private lateinit var pbSave: ProgressBar
 
+    private lateinit var adapter: ImagePickerAdapter
     private lateinit var boardSize: BoardSize
     private var numImagesRequired = -1
     private val chosenImageUris = mutableListOf<Uri>()
@@ -62,7 +63,9 @@ class CreateActivity : AppCompatActivity() {
         //init variable
         rvImagePicker = findViewById(R.id.rvImagePicker)
         btnSave = findViewById(R.id.btnSave)
-        etGameName = findViewById(R.id.etGameName)
+        etGameName = findViewById(R.id.etPlayCustomGame)
+        pbSave = findViewById(R.id.pbSave)
+
 
         //get board size from intent and set action bar title
         boardSize = intent.getSerializableExtra(EXTRA_BOARD_SIZE) as BoardSize
@@ -165,13 +168,41 @@ class CreateActivity : AppCompatActivity() {
 
     //save data to firebase
     private fun saveDataToFirebase() {
+        btnSave.isEnabled = false
         val customGameName = etGameName.text.toString()
+        //check if game name already exists
+        db.collection("games").document(customGameName).get().addOnSuccessListener { document ->
+            if (document != null && document.data != null) {
+                AlertDialog.Builder(this)
+                    .setTitle("Choose another name")
+                    .setMessage("A game with this name already exists. Choose another name")
+                    .setPositiveButton("OK", null)
+                    .show()
+                btnSave.isEnabled = true
+            } else {
+                handleImageUpload(customGameName)
+            }
+        }
+            .addOnFailureListener {
+                Toast.makeText(
+                    this,
+                    "Error occured while saving. Try again later",
+                    Toast.LENGTH_LONG
+                ).show()
+                btnSave.isEnabled = true
+            }
+
+    }
+
+    private fun handleImageUpload(gameName: String) {
+        pbSave.visibility = View.VISIBLE
         var didEncounterError = false
         val uploadedImageUrls = mutableListOf<String>()
         for ((index, photoUri) in chosenImageUris.withIndex()) {
             val imageByteArray = getImageByteArray(photoUri)
-            val filePath = "images/$customGameName/${System.currentTimeMillis()}-$index.jpg"
+            val filePath = "images/$gameName/${System.currentTimeMillis()}-$index.jpg"
             val photoReference = storage.reference.child(filePath)
+
             photoReference.putBytes(imageByteArray).continueWithTask { photoUploadTask ->
                 photoReference.downloadUrl
             }.addOnCompleteListener { downloadUrlTask ->
@@ -180,19 +211,44 @@ class CreateActivity : AppCompatActivity() {
                     didEncounterError = true
                     return@addOnCompleteListener
                 }
-                if (didEncounterError) return@addOnCompleteListener
+                if (didEncounterError) {
+                    pbSave.visibility = View.GONE
+                    return@addOnCompleteListener
+                }
+                //success
+                pbSave.progress = uploadedImageUrls.size * 100 / chosenImageUris.size
                 val downloadUrl = downloadUrlTask.result.toString()
                 uploadedImageUrls.add(downloadUrl)
 
                 if (uploadedImageUrls.size == chosenImageUris.size) {
-                    handleAllImagesUploaded(customGameName, uploadedImageUrls)
+                    handleAllImagesUploaded(gameName, uploadedImageUrls)
                 }
             }
         }
     }
 
     private fun handleAllImagesUploaded(gameName: String, imageUrls: MutableList<String>) {
-
+        db.collection("games").document(gameName)
+            .set(mapOf("images" to imageUrls))
+            .addOnCompleteListener { gameCreationTask ->
+                pbSave.visibility = View.GONE
+                if (!gameCreationTask.isSuccessful) {
+                    Toast.makeText(
+                        this,
+                        "Failed to create new game. Try again later",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnCompleteListener
+                }
+                AlertDialog.Builder(this)
+                    .setTitle("Game created. Let's play your new game")
+                    .setPositiveButton("OK") { _, _ ->
+                        val resultData = Intent()
+                        resultData.putExtra(EXTRA_GAME_NAME, gameName)
+                        setResult(Activity.RESULT_OK, resultData)
+                        finish()
+                    }.show()
+            }
     }
 
     //returns scaled image byte array

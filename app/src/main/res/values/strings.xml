@@ -11,4 +11,5 @@
     <string name="save">Save</string>
     <string name="game_name_example_dog_breeds">Game name(example: dog breeds)</string>
     <string name="selectedimage">selectedimage</string>
+    <string name="enter_game_name">Enter Game Name</string>
 </resources>

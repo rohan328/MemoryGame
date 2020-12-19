@@ -2,7 +2,7 @@ package com.rohan328.memorygame.models
 
 import com.rohan328.memorygame.utils.DEFAULT_ICONS
 
-class MemoryGame(private val boardSize: BoardSize) {
+class MemoryGame(private val boardSize: BoardSize, customImages: List<String>?) {
 
     val cards: List<MemoryCard>
     var numPairsFound: Int = 0
@@ -11,12 +11,18 @@ class MemoryGame(private val boardSize: BoardSize) {
     private var indexOfSingleSelectedCard: Int? = null
 
     init {
-        //get unique icons
-        val chosenImages = DEFAULT_ICONS.shuffled().take(boardSize.getNumPairs())
-        //double the icons and randomize
-        val randomizedImages = (chosenImages + chosenImages).shuffled()
-        //wrap into card data model
-        cards = randomizedImages.map { MemoryCard(it) }
+        if (customImages == null) {
+            //get unique icons
+            val chosenImages = DEFAULT_ICONS.shuffled().take(boardSize.getNumPairs())
+            //double the icons and randomize
+            val randomizedImages = (chosenImages + chosenImages).shuffled()
+            //wrap into card data model
+            cards = randomizedImages.map { MemoryCard(it) }
+        } else {
+            val randomizedImages = (customImages + customImages).shuffled()
+            cards = randomizedImages.map { MemoryCard(it.hashCode(), it) }
+        }
+
     }
 
     fun flipCard(position: Int): Boolean {
@@ -41,6 +47,7 @@ class MemoryGame(private val boardSize: BoardSize) {
         }
         //actually flip card
         card.isFaceUp = !card.isFaceUp
+
 
         return foundMatch
     }
