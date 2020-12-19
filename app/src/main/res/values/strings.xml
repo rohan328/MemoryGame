@@ -2,4 +2,9 @@
     <string name="app_name">Memory Game</string>
     <string name="moves">Moves: 0</string>
     <string name="pairs">Pairs: 0/4</string>
+    <string name="easy_4_x_2">Easy (4 x 2)</string>
+    <string name="medium">Medium (6 x 3)</string>
+    <string name="hard">Hard (6 x 6)</string>
+    <string name="refresh">Refresh</string>
+    <string name="choose_new_size">Choose New Size</string>
 </resources>
