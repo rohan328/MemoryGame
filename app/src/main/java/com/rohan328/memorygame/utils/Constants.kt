@@ -2,6 +2,9 @@ package com.rohan328.memorygame.utils
 
 import com.rohan328.memorygame.R
 
+
+const val EXTRA_BOARD_SIZE = "newBoardSize"
+
 val DEFAULT_ICONS = listOf(
     R.drawable.ic_airplane,
     R.drawable.ic_anchor,

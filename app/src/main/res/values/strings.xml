@@ -7,4 +7,8 @@
     <string name="hard">Hard (6 x 6)</string>
     <string name="refresh">Refresh</string>
     <string name="choose_new_size">Choose New Size</string>
+    <string name="create_custom_game">Create Custom Game</string>
+    <string name="save">Save</string>
+    <string name="game_name_example_dog_breeds">Game name(example: dog breeds)</string>
+    <string name="selectedimage">selectedimage</string>
 </resources>

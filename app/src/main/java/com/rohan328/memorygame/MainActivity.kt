@@ -2,6 +2,7 @@ package com.rohan328.memorygame
 
 import android.animation.ArgbEvaluator
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,8 +20,14 @@ import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClic
 import com.google.android.material.snackbar.Snackbar
 import com.rohan328.memorygame.models.BoardSize
 import com.rohan328.memorygame.models.MemoryGame
+import com.rohan328.memorygame.utils.EXTRA_BOARD_SIZE
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val TAG = "MainActivity"
+        private const val CREATE_REQUEST_CODE = 328
+    }
 
     private lateinit var adapter: MemoryBoardAdapter
     private lateinit var memoryGame: MemoryGame
@@ -42,6 +49,60 @@ class MainActivity : AppCompatActivity() {
         layoutRoot = findViewById(R.id.layoutRoot)
 
         setupBoard()
+    }
+
+    //inflate menu
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    //menu item click listener
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.miRefresh -> {
+                //reset game
+                if (memoryGame.getNumMoves() > 0 && !memoryGame.haveWonGame()) {
+                    showAlertDialog("Quit your current game?", null) {
+                        setupBoard()
+                    }
+                } else {
+                    setupBoard()
+                }
+                return true
+            }
+            R.id.miNewSize -> {
+                showNewSizeDialog()
+                return true
+            }
+            R.id.miCreate -> {
+                showCreationDialog()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    //show dialog to choose size for new game
+    @SuppressLint("InflateParams")
+    private fun showCreationDialog() {
+        //inflate the radiobutton view
+        val boardSizeView = LayoutInflater.from(this).inflate(R.layout.dialog_board_size, null)
+        val radioGroupSize = boardSizeView.findViewById<RadioGroup>(R.id.radioGroup)
+
+        //show dialog to choose desired board size
+        showAlertDialog("Create you own memory board", boardSizeView) {
+            val desiredBoardSize = when (radioGroupSize.checkedRadioButtonId) {
+                R.id.rbEasy -> BoardSize.EASY
+                R.id.rbMedium -> BoardSize.MEDIUM
+                else -> BoardSize.HARD
+            }
+            //navigate to new activity
+            val intent = Intent(this, CreateActivity::class.java)
+            intent.putExtra(EXTRA_BOARD_SIZE, desiredBoardSize)
+            startActivityForResult(intent, CREATE_REQUEST_CODE)
+        }
+
     }
 
     //setup the game
@@ -129,34 +190,7 @@ class MainActivity : AppCompatActivity() {
         adapter.notifyDataSetChanged() //notify adapter
     }
 
-    //inflate menu
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    //menu item click listener
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.miRefresh -> {
-                //reset game
-                if (memoryGame.getNumMoves() > 0 && !memoryGame.haveWonGame()) {
-                    showAlertDialog("Quit your current game?", null) {
-                        setupBoard()
-                    }
-                } else {
-                    setupBoard()
-                }
-                return true
-            }
-            R.id.miNewSize -> {
-                showNewSizeDialog()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
+    //show size selector alert dialog
     @SuppressLint("InflateParams")
     private fun showNewSizeDialog() {
         //inflate the radiobutton view
